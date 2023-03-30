@@ -1,16 +1,24 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: %i[ show update destroy ]
-
-  # GET /users
-  def index
-    @users = User.all
-
-    render json: @users
-  end
-
+  before_action :set_user, only: %i[ update destroy ]
   # GET /users/1
   def show
-    render json: @user
+    @user = User.find_by(id: session[:user_id])
+    if @user
+      render json: @user
+    else
+      render json: { error: "Invalid user" }, status: :unauthorized
+    end
+  end
+
+  def login
+    user = User.find_by(email: params[:email])
+    # If login, save in session the login
+    session[:user_id] = user.id
+    if user && user.authenticate(params[:password])
+      render json: user
+    else
+      render json: { error: "Invalid email or password" }, status: :unauthorized
+    end
   end
 
   # POST /users
@@ -31,31 +39,12 @@ class UsersController < ApplicationController
     end
 
     @user = User.new(user_params)
-    
-    def @user.as_json(options={})
-      super(:except => [:password_digest])
-    end
-
 
     if @user.save
       render json: @user, status: :created, location: @user
     else
       render json: @user.errors, status: :unprocessable_entity
     end
-  end
-
-  # PATCH/PUT /users/1
-  def update
-    if @user.update(user_params)
-      render json: @user
-    else
-      render json: @user.errors, status: :unprocessable_entity
-    end
-  end
-
-  # DELETE /users/1
-  def destroy
-    @user.destroy
   end
 
   private
