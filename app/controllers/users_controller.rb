@@ -15,7 +15,6 @@ class UsersController < ApplicationController
 
   # POST /users
   def create
-
     if user_params[:email].nil?
       render json: { error: "Email is required" }, status: :unprocessable_entity
       return
@@ -25,13 +24,18 @@ class UsersController < ApplicationController
       render json: { error: "Password is required" }, status: :unprocessable_entity
       return
     end
-    
+
     if User.find_by(email: user_params[:email])
       render json: { error: "Email already exists" }, status: :unprocessable_entity
       return
     end
 
     @user = User.new(user_params)
+    
+    def @user.as_json(options={})
+      super(:except => [:password_digest])
+    end
+
 
     if @user.save
       render json: @user, status: :created, location: @user
