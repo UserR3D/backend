@@ -15,6 +15,22 @@ class UsersController < ApplicationController
 
   # POST /users
   def create
+
+    if user_params[:email].nil?
+      render json: { error: "Email is required" }, status: :unprocessable_entity
+      return
+    end
+
+    if user_params[:password].nil?
+      render json: { error: "Password is required" }, status: :unprocessable_entity
+      return
+    end
+    
+    if User.find_by(email: user_params[:email])
+      render json: { error: "Email already exists" }, status: :unprocessable_entity
+      return
+    end
+
     @user = User.new(user_params)
 
     if @user.save
@@ -39,13 +55,14 @@ class UsersController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_user
-      @user = User.find(params[:id])
-    end
 
-    # Only allow a list of trusted parameters through.
-    def user_params
-      params.require(:user).permit(:email, :password_digest)
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_user
+    @user = User.find(params[:id])
+  end
+
+  # Only allow a list of trusted parameters through.
+  def user_params
+    params.permit(:email, :password)
+  end
 end
